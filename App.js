@@ -1,5 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import {
+  Button,
+  Modal,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -12,82 +14,186 @@ import {
   FontAwesome,
   FontAwesome5,
 } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import TapBox from "./components/TapBox";
 import { useState, useRef, useEffect } from "react";
 
 export default function App() {
-  const [time, setTime] = useState(0);
+  const [timeA, setTimeA] = useState(300);
+  const [timeB, setTimeB] = useState(300);
   const [isActive, setIsActive] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
+  const [ModalIsVisible, setModalIsVisible] = useState(false);
+  const [time, setTime] = useState(300);
+  const [gameOver, setGameOver] = useState(false);
+  const [paused, setpaused] = useState(false);
+  const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
 
   const intervalRef = useRef(null);
+  const startTimeRef = useRef(null);
 
-  const countdown = () => {
-    setTime((prevTime) => prevTime + 1);
+  const startTimer = (player) => {
+    console.log("intervalRef", intervalRef);
+    console.log("intervalRef.current", intervalRef.current);
+    console.log("startTimeRef", startTimeRef);
+    console.log("startTimeRef.current", startTimeRef.current);
+
+    setIsActive(true);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setActiveButton(player);
+    startTimeRef.current = Date.now();
+
+    intervalRef.current = setInterval(() => {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
+
+      if (activeButton === "A") {
+        if (timeB - elapsedSeconds > 0) {
+          setTimeB((prev) => prev - elapsedSeconds);
+        } else {
+          setGameOver(true);
+        }
+      } else if (activeButton === "B") {
+        if (timeB - elapsedSeconds > 0) {
+          setTimeA((prev) => prev - elapsedSeconds);
+        } else {
+          setGameOver(true);
+        }
+      }
+
+      startTimeRef.current = now; // Reset the timer base
+    }, 1000);
   };
 
   const handlePressA = () => {
     if (activeButton === null) {
       // First move: if A is pressed, start B's timer
       setActiveButton("B");
+      startTimer("B");
+      // startTimer(player);
     } else if (activeButton === "A") {
       // Only process press if A is the active clock
       // (if you want to allow a press on the active clock to switch, then)
       setActiveButton("B");
+      startTimer("B");
     }
   };
   const handlePressB = () => {
     if (activeButton === null) {
       // First move: if A is pressed, start B's timer
       setActiveButton("A");
+      startTimer("A");
     } else if (activeButton === "B") {
       // Only process press if A is the active clock
       // (if you want to allow a press on the active clock to switch, then)
       setActiveButton("A");
+      startTimer("A");
     }
   };
 
   const resetTimer = () => {
+    clearInterval(intervalRef.current);
+    setTimeA(time);
+    setTimeB(time);
     setActiveButton(null);
+    setIsActive(false);
   };
 
-  // const handlePress = () => {
-  //   setIsActive(!isActive);
-  //   if (isActive) {
-  //   }
-  //   const countInterval = setInterval(countdown, 1000);
-  //   console.log("button press", countInterval);
-  //   if (time > 10) {
-  //     clearInterval(countInterval);
-  //   }
-  //   clearInterval(countInterval);
-  // };
+  const pauseTimer = () => {
+    setpaused(true);
+    console.log("paused Time");
+    setIsActive(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null; // Optional: helps to track that the timer is paused
+    }
+  };
+
+  const resumeTimer = () => {
+    console.log("time resumed");
+    setpaused(false);
+
+    if (!isActive) {
+      setIsActive(true);
+
+      // Reset the start time to now so the elapsed calculation is correct
+      startTimeRef.current = Date.now();
+      // Restart the interval
+      intervalRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
+
+        if (activeButton === "A") {
+          setTimeA((prev) => prev - elapsedSeconds);
+        } else if (activeButton === "B") {
+          setTimeB((prev) => prev - elapsedSeconds);
+        }
+
+        startTimeRef.current = now;
+      }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    return () => clearInterval(intervalRef.current);
+  }, []);
+
   return (
     <View style={styles.container}>
+      <Modal
+        visible={ModalIsVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setModalIsVisible(false)}
+      >
+        <View style={styles.modalPicker}>
+          <Picker
+            selectedValue={time}
+            onValueChange={(itemValue, itemIndex) => {
+              setTimeA(itemValue);
+              setTimeB(itemValue);
+              setTime(itemValue);
+            }}
+          >
+            {setTimer.map((t) => (
+              <Picker.Item key={t} label={t.toString()} value={t} />
+            ))}
+          </Picker>
+          <Button title="close" onPress={() => setModalIsVisible(false)} />
+        </View>
+      </Modal>
       <TapBox
         handlePress={handlePressA}
-        time={time}
+        time={gameOver ? "Time Up !" : timeA}
         activeButton={activeButton === "A"}
+        disabled={gameOver}
+        style={{ backgroundColor: "red" }}
       />
       <View style={styles.optionsSection}>
         <TouchableOpacity>
           <Ionicons
-            name={isActive ? "play" : "pause"}
+            name={isActive ? "pause" : "play"}
             size={36}
             color={"#EDEEC0"}
+            onPress={isActive ? pauseTimer : resumeTimer}
           />
         </TouchableOpacity>
-        <TouchableOpacity disabled={isActive} onPress={resetTimer}>
+        <TouchableOpacity onPress={resetTimer}>
           <MaterialIcons name="autorenew" size={36} color={"#EDEEC0"} />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity
+          disabled={isActive}
+          onPress={() => setModalIsVisible(true)}
+        >
           <FontAwesome name="gear" size={36} color={"#EDEEC0"} />
         </TouchableOpacity>
       </View>
       <TapBox
         handlePress={handlePressB}
-        time={time}
+        time={gameOver ? "Time Up !" : timeB}
         activeButton={activeButton === "B"}
+        disabled={gameOver}
+        paused={paused}
       />
       <StatusBar style="auto" />
     </View>
@@ -108,5 +214,8 @@ const styles = StyleSheet.create({
   },
   activeButton: {
     backgroundColor: "#D0C88E",
+  },
+  modalPicker: {
+    backgroundColor: "#a4a4a4",
   },
 });
