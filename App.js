@@ -33,11 +33,6 @@ export default function App() {
   const startTimeRef = useRef(null);
 
   const startTimer = (player) => {
-    console.log("intervalRef", intervalRef);
-    console.log("intervalRef.current", intervalRef.current);
-    console.log("startTimeRef", startTimeRef);
-    console.log("startTimeRef.current", startTimeRef.current);
-
     setIsActive(true);
     if (intervalRef.current) clearInterval(intervalRef.current);
     setActiveButton(player);
@@ -47,20 +42,27 @@ export default function App() {
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
 
-      if (activeButton === "A") {
-        if (timeB - elapsedSeconds > 0) {
-          setTimeB((prev) => prev - elapsedSeconds);
-        } else {
-          setGameOver(true);
-        }
-      } else if (activeButton === "B") {
-        if (timeB - elapsedSeconds > 0) {
-          setTimeA((prev) => prev - elapsedSeconds);
-        } else {
-          setGameOver(true);
-        }
+      if (player === "A" && !gameOver) {
+        setTimeA((prev) => {
+          const newTime = prev - elapsedSeconds;
+          if (newTime <= 0) {
+            clearInterval(intervalRef.current);
+            setGameOver(true);
+            return 0;
+          }
+          return newTime;
+        });
+      } else if (player === "B" && !gameOver) {
+        setTimeB((prev) => {
+          const newTime = prev - elapsedSeconds;
+          if (newTime <= 0) {
+            clearInterval(intervalRef.current);
+            setGameOver(true);
+            return 0;
+          }
+          return newTime;
+        });
       }
-
       startTimeRef.current = now; // Reset the timer base
     }, 1000);
   };
@@ -97,6 +99,7 @@ export default function App() {
     setTimeB(time);
     setActiveButton(null);
     setIsActive(false);
+    setGameOver(false);
   };
 
   const pauseTimer = () => {
@@ -164,9 +167,9 @@ export default function App() {
       </Modal>
       <TapBox
         handlePress={handlePressA}
-        time={gameOver ? "Time Up !" : timeA}
+        time={timeA}
         activeButton={activeButton === "A"}
-        disabled={gameOver}
+        gameOver={timeA ? false : gameOver}
         style={{ backgroundColor: "red" }}
       />
       <View style={styles.optionsSection}>
@@ -190,9 +193,9 @@ export default function App() {
       </View>
       <TapBox
         handlePress={handlePressB}
-        time={gameOver ? "Time Up !" : timeB}
+        time={timeB}
         activeButton={activeButton === "B"}
-        disabled={gameOver}
+        gameOver={timeB ? false : gameOver}
         paused={paused}
       />
       <StatusBar style="auto" />

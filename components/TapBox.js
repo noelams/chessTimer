@@ -1,18 +1,30 @@
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import {
+  MaterialIcons,
+  Ionicons,
+  FontAwesome,
+  FontAwesome5,
+} from "@expo/vector-icons";
 import React from "react";
 
-const TapBox = ({ handlePress, time, activeButton }) => {
+const TapBox = ({ handlePress, time, activeButton, gameOver }) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={handlePress}
-        style={{
-          ...styles.tabBox,
-          backgroundColor: activeButton ? "#D0C88E" : "#A7A284",
-        }}
-      >
-        <Text style={styles.time}>{time}</Text>
-      </TouchableOpacity>
+      {gameOver ? (
+        <View style={{ ...styles.tabBox, backgroundColor: "#9a3737" }}>
+          <Ionicons name="flag-outline" size={96} color="white" />
+        </View>
+      ) : (
+        <TouchableOpacity
+          onPress={handlePress}
+          style={{
+            ...styles.tabBox,
+            backgroundColor: activeButton ? "#D0C88E" : "#A7A284",
+          }}
+        >
+          <Text style={styles.time}>{time}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
