@@ -1,8 +1,8 @@
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
   Modal,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -27,6 +27,7 @@ export default function App() {
   const [time, setTime] = useState(300);
   const [gameOver, setGameOver] = useState(false);
   const [paused, setpaused] = useState(false);
+  const [movesCount, setmovesCount] = useState(0);
   const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
 
   const intervalRef = useRef(null);
@@ -69,6 +70,7 @@ export default function App() {
 
   const handlePressA = () => {
     if (activeButton === null) {
+      setmovesCount((prev) => prev + 1);
       // First move: if A is pressed, start B's timer
       setActiveButton("B");
       startTimer("B");
@@ -78,32 +80,37 @@ export default function App() {
       // (if you want to allow a press on the active clock to switch, then)
       setActiveButton("B");
       startTimer("B");
+      setmovesCount((prev) => prev + 1);
     }
   };
   const handlePressB = () => {
     if (activeButton === null) {
+      setmovesCount((prev) => prev + 1);
       // First move: if A is pressed, start B's timer
       setActiveButton("A");
       startTimer("A");
     } else if (activeButton === "B") {
       // Only process press if A is the active clock
       // (if you want to allow a press on the active clock to switch, then)
+      setmovesCount((prev) => prev + 1);
       setActiveButton("A");
       startTimer("A");
     }
   };
 
   const resetTimer = () => {
-    clearInterval(intervalRef.current);
-    setTimeA(time);
-    setTimeB(time);
+    clearInterval(intervalRef.current); // stop setinterval function
+    setTimeA(time); //reset timer A
+    setTimeB(time); //reset timer B
     setActiveButton(null);
     setIsActive(false);
     setGameOver(false);
+    setmovesCount(0);
   };
 
   const pauseTimer = () => {
     setpaused(true);
+    setActiveButton(null);
     console.log("paused Time");
     setIsActive(false);
     if (intervalRef.current) {
@@ -137,22 +144,26 @@ export default function App() {
     }
   };
 
+  const fullMoves = Math.floor(movesCount / 2);
+
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Modal
         visible={ModalIsVisible}
         animationType="fade"
         transparent={true}
         onRequestClose={() => setModalIsVisible(false)}
+        style={styles.modal}
       >
-        <View style={styles.modalPicker}>
+        <View style={styles.pickerContainer}>
           <Picker
+            style={styles.picker}
             selectedValue={time}
-            onValueChange={(itemValue, itemIndex) => {
+            onValueChange={(itemValue) => {
               setTimeA(itemValue);
               setTimeB(itemValue);
               setTime(itemValue);
@@ -162,15 +173,18 @@ export default function App() {
               <Picker.Item key={t} label={t.toString()} value={t} />
             ))}
           </Picker>
-          <Button title="close" onPress={() => setModalIsVisible(false)} />
+          <Button
+            title="close"
+            onPress={() => setModalIsVisible(false)}
+            style={{ backgroundColor: "#333" }}
+          />
         </View>
       </Modal>
       <TapBox
         handlePress={handlePressA}
         time={timeA}
         activeButton={activeButton === "A"}
-        gameOver={timeA ? false : gameOver}
-        style={{ backgroundColor: "red" }}
+        gameOver={timeA ? false : gameOver} // once timeA reaches 0, gameOver is true
       />
       <View style={styles.optionsSection}>
         <TouchableOpacity>
@@ -190,6 +204,7 @@ export default function App() {
         >
           <FontAwesome name="gear" size={36} color={"#EDEEC0"} />
         </TouchableOpacity>
+        <Text style={styles.movesCount}>{fullMoves}</Text>
       </View>
       <TapBox
         handlePress={handlePressB}
@@ -199,7 +214,7 @@ export default function App() {
         paused={paused}
       />
       <StatusBar style="auto" />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -214,11 +229,20 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-evenly",
+    alignItems: "center",
   },
   activeButton: {
     backgroundColor: "#D0C88E",
   },
-  modalPicker: {
-    backgroundColor: "#a4a4a4",
+  pickerContainer: {
+    flex: 1,
+    backgroundColor: "#433e0e83",
+  },
+  picker: {
+    backgroundColor: "#fff",
+  },
+  movesCount: {
+    fontSize: 36,
+    color: "#EDEEC0",
   },
 });
