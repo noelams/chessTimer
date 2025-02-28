@@ -17,6 +17,8 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import TapBox from "./components/TapBox";
 import { useState, useRef, useEffect } from "react";
+import { Audio } from "expo-av";
+// import { useAudioPlayer } from "expo-audio";
 
 export default function App() {
   const [timeA, setTimeA] = useState(300);
@@ -28,7 +30,36 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [paused, setpaused] = useState(false);
   const [movesCount, setmovesCount] = useState(0);
+  // const [sound, setSound] = useState();
   const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
+
+  const soundRef = useRef(null);
+
+  useEffect(() => {
+    async function loadSound() {
+      const { sound } = await Audio.Sound.createAsync(
+        require("./assets/fingerSnap.wav")
+      );
+      soundRef.current = sound;
+    }
+
+    loadSound();
+
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  async function playSound() {
+    if (soundRef.current) {
+      console.log("tapped");
+      await soundRef.current.replayAsync();
+    } else {
+      console.log("Sound not loaded yet");
+    }
+  }
 
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -71,6 +102,7 @@ export default function App() {
   const handlePressA = () => {
     if (activeButton === null) {
       setmovesCount((prev) => prev + 1);
+      playSound();
       // First move: if A is pressed, start B's timer
       setActiveButton("B");
       startTimer("B");
@@ -81,6 +113,7 @@ export default function App() {
       setActiveButton("B");
       startTimer("B");
       setmovesCount((prev) => prev + 1);
+      playSound();
     }
   };
   const handlePressB = () => {
@@ -89,12 +122,14 @@ export default function App() {
       // First move: if A is pressed, start B's timer
       setActiveButton("A");
       startTimer("A");
+      playSound();
     } else if (activeButton === "B") {
       // Only process press if A is the active clock
       // (if you want to allow a press on the active clock to switch, then)
       setmovesCount((prev) => prev + 1);
       setActiveButton("A");
       startTimer("A");
+      playSound();
     }
   };
 
@@ -182,6 +217,9 @@ export default function App() {
       </Modal>
       <TapBox
         handlePress={handlePressA}
+        // onPress={() => {
+        //   playSound();
+        // }}
         time={timeA}
         activeButton={activeButton === "A"}
         gameOver={timeA ? false : gameOver} // once timeA reaches 0, gameOver is true
@@ -212,6 +250,9 @@ export default function App() {
         activeButton={activeButton === "B"}
         gameOver={timeB ? false : gameOver}
         paused={paused}
+        // onPress={() => {
+        //   playSound();
+        // }}
       />
       <StatusBar style="auto" />
     </SafeAreaView>

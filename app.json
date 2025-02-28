@@ -19,10 +19,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.noelams.chessTimer"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ffa3ca45-a26a-4d37-b34f-9b7875cf7c51"
+      }
+    },
+    "plugins": [
+      "expo-audio",
+      "expo-av"
+    ]
   }
 }

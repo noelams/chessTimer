@@ -16,7 +16,9 @@ const TapBox = ({ handlePress, time, activeButton, gameOver }) => {
         </View>
       ) : (
         <TouchableOpacity
-          onPress={handlePress}
+          onPress={() => {
+            handlePress(); // For timer functionality
+          }}
           style={{
             ...styles.tabBox,
             backgroundColor: activeButton ? "#D0C88E" : "#A7A284",
