@@ -21,17 +21,26 @@ import { Audio } from "expo-av";
 // import { useAudioPlayer } from "expo-audio";
 
 export default function App() {
-  const [timeA, setTimeA] = useState(300);
-  const [timeB, setTimeB] = useState(300);
+  const initialTime = 300;
+  const [timeA, setTimeA] = useState(initialTime * 1000);
+  const [timeB, setTimeB] = useState(initialTime * 1000);
   const [isActive, setIsActive] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
   const [ModalIsVisible, setModalIsVisible] = useState(false);
-  const [time, setTime] = useState(300);
+  const [time, setTime] = useState(timeA);
   const [gameOver, setGameOver] = useState(false);
   const [paused, setpaused] = useState(false);
   const [movesCount, setmovesCount] = useState(0);
   // const [sound, setSound] = useState();
   const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
+
+  const convertToMinutes = (seconds) => {
+    if (seconds > 59) {
+      return `${Math.floor(seconds / 60)} min`;
+    } else {
+      return `${seconds} sec`;
+    }
+  };
 
   const soundRef = useRef(null);
 
@@ -64,6 +73,19 @@ export default function App() {
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
 
+  const formatTime = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const milliseconds = ms % 100;
+    return (
+      minutes.toString().padStart(2, "0") +
+      ":" +
+      seconds.toString().padStart(2, "0") +
+      ":" +
+      milliseconds.toString().padStart(2, "0")
+    );
+  };
+
   const startTimer = (player) => {
     setIsActive(true);
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -72,11 +94,11 @@ export default function App() {
 
     intervalRef.current = setInterval(() => {
       const now = Date.now();
-      const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
+      const elapsedMs = now - startTimeRef.current;
 
       if (player === "A" && !gameOver) {
         setTimeA((prev) => {
-          const newTime = prev - elapsedSeconds;
+          const newTime = prev - elapsedMs;
           if (newTime <= 0) {
             clearInterval(intervalRef.current);
             setGameOver(true);
@@ -86,7 +108,7 @@ export default function App() {
         });
       } else if (player === "B" && !gameOver) {
         setTimeB((prev) => {
-          const newTime = prev - elapsedSeconds;
+          const newTime = prev - elapsedMs;
           if (newTime <= 0) {
             clearInterval(intervalRef.current);
             setGameOver(true);
@@ -96,7 +118,7 @@ export default function App() {
         });
       }
       startTimeRef.current = now; // Reset the timer base
-    }, 1000);
+    }, 50);
   };
 
   const handlePressA = () => {
@@ -166,16 +188,16 @@ export default function App() {
       // Restart the interval
       intervalRef.current = setInterval(() => {
         const now = Date.now();
-        const elapsedSeconds = Math.floor((now - startTimeRef.current) / 1000);
+        const elapsedMs = now - startTimeRef.current;
 
         if (activeButton === "A") {
-          setTimeA((prev) => prev - elapsedSeconds);
+          setTimeA((prev) => prev - elapsedMs);
         } else if (activeButton === "B") {
-          setTimeB((prev) => prev - elapsedSeconds);
+          setTimeB((prev) => prev - elapsedMs);
         }
 
         startTimeRef.current = now;
-      }, 1000);
+      }, 50);
     }
   };
 
@@ -205,7 +227,7 @@ export default function App() {
             }}
           >
             {setTimer.map((t) => (
-              <Picker.Item key={t} label={t.toString()} value={t} />
+              <Picker.Item key={t} label={convertToMinutes(t)} value={t} />
             ))}
           </Picker>
           <Button
@@ -217,10 +239,7 @@ export default function App() {
       </Modal>
       <TapBox
         handlePress={handlePressA}
-        // onPress={() => {
-        //   playSound();
-        // }}
-        time={timeA}
+        time={formatTime(timeA)}
         activeButton={activeButton === "A"}
         gameOver={timeA ? false : gameOver} // once timeA reaches 0, gameOver is true
       />
@@ -246,13 +265,10 @@ export default function App() {
       </View>
       <TapBox
         handlePress={handlePressB}
-        time={timeB}
+        time={formatTime(timeB)}
         activeButton={activeButton === "B"}
         gameOver={timeB ? false : gameOver}
         paused={paused}
-        // onPress={() => {
-        //   playSound();
-        // }}
       />
       <StatusBar style="auto" />
     </SafeAreaView>

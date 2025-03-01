@@ -8,6 +8,9 @@ import {
 import React from "react";
 
 const TapBox = ({ handlePress, time, activeButton, gameOver }) => {
+  const parts = time.split(":");
+  const mainTime = parts.slice(0, 2).join(":");
+  const milliTime = parts[2];
   return (
     <View style={styles.container}>
       {gameOver ? (
@@ -24,7 +27,10 @@ const TapBox = ({ handlePress, time, activeButton, gameOver }) => {
             backgroundColor: activeButton ? "#D0C88E" : "#A7A284",
           }}
         >
-          <Text style={styles.time}>{time}</Text>
+          <View style={styles.timeContainer}>
+            <Text style={styles.mainTime}>{mainTime}</Text>
+            <Text style={styles.milliTime}>:{milliTime}</Text>
+          </View>
         </TouchableOpacity>
       )}
     </View>
@@ -48,8 +54,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  time: {
-    fontSize: 96,
+  timeContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  mainTime: {
+    fontSize: 72, // Larger font size for minutes and seconds
+    color: "#333333",
+  },
+  milliTime: {
+    fontSize: 36, // Smaller font size for milliseconds
+    color: "#888787",
   },
 });
 
