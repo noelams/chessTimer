@@ -8,17 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  MaterialIcons,
-  Ionicons,
-  FontAwesome,
-  FontAwesome5,
-} from "@expo/vector-icons";
+import { MaterialIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import TapBox from "./components/TapBox";
 import { useState, useRef, useEffect } from "react";
 import { Audio } from "expo-av";
-// import { useAudioPlayer } from "expo-audio";
 
 export default function App() {
   const initialTime = 300;
@@ -31,8 +25,7 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [paused, setpaused] = useState(false);
   const [movesCount, setmovesCount] = useState(0);
-  // const [sound, setSound] = useState();
-  const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
+  const setTimer = [15, 30, 45, 60, 120, 180, 300, 600, 900, 1800, 3600];
 
   const convertToMinutes = (seconds) => {
     if (seconds > 59) {
@@ -221,9 +214,10 @@ export default function App() {
             style={styles.picker}
             selectedValue={time}
             onValueChange={(itemValue) => {
-              setTimeA(itemValue);
-              setTimeB(itemValue);
-              setTime(itemValue);
+              const newTime = itemValue * 1000;
+              setTimeA(newTime);
+              setTimeB(newTime);
+              setTime(newTime);
             }}
           >
             {setTimer.map((t) => (
@@ -270,7 +264,7 @@ export default function App() {
         gameOver={timeB ? false : gameOver}
         paused={paused}
       />
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </SafeAreaView>
   );
 }
