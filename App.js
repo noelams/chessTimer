@@ -8,17 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  MaterialIcons,
-  Ionicons,
-  FontAwesome,
-  FontAwesome5,
-} from "@expo/vector-icons";
+import { MaterialIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import TapBox from "./components/TapBox";
 import { useState, useRef, useEffect } from "react";
 import { Audio } from "expo-av";
-// import { useAudioPlayer } from "expo-audio";
 
 export default function App() {
   const initialTime = 300;
@@ -31,8 +25,7 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [paused, setpaused] = useState(false);
   const [movesCount, setmovesCount] = useState(0);
-  // const [sound, setSound] = useState();
-  const setTimer = [15, 30, 45, 60, 120, 180, 300, 600];
+  const setTimer = [15, 30, 45, 60, 120, 180, 300, 600, 900, 1800, 3600];
 
   const convertToMinutes = (seconds) => {
     if (seconds > 59) {
@@ -216,25 +209,29 @@ export default function App() {
         onRequestClose={() => setModalIsVisible(false)}
         style={styles.modal}
       >
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            selectedValue={time}
-            onValueChange={(itemValue) => {
-              setTimeA(itemValue);
-              setTimeB(itemValue);
-              setTime(itemValue);
-            }}
-          >
-            {setTimer.map((t) => (
-              <Picker.Item key={t} label={convertToMinutes(t)} value={t} />
-            ))}
-          </Picker>
-          <Button
-            title="close"
-            onPress={() => setModalIsVisible(false)}
-            style={{ backgroundColor: "#333" }}
-          />
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Picker
+              style={styles.picker}
+              selectedValue={time}
+              onValueChange={(itemValue) => {
+                const newTime = itemValue * 1000;
+                setTimeA(newTime);
+                setTimeB(newTime);
+                setTime(newTime);
+              }}
+            >
+              {setTimer.map((t) => (
+                <Picker.Item key={t} label={convertToMinutes(t)} value={t} />
+              ))}
+            </Picker>
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setModalIsVisible(false)}
+            >
+              <Text style={styles.closeModalText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
       <TapBox
@@ -270,7 +267,7 @@ export default function App() {
         gameOver={timeB ? false : gameOver}
         paused={paused}
       />
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </SafeAreaView>
   );
 }
@@ -279,8 +276,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#433E0E",
-    alignItems: "center",
-    justifyContent: "center",
   },
   optionsSection: {
     width: "100%",
@@ -291,12 +286,29 @@ const styles = StyleSheet.create({
   activeButton: {
     backgroundColor: "#D0C88E",
   },
-  pickerContainer: {
+  modalContainer: {
     flex: 1,
     backgroundColor: "#433e0e83",
+    justifyContent: "center",
+  },
+  modalContent: {
+    marginHorizontal: 10,
+    height: 100,
   },
   picker: {
     backgroundColor: "#fff",
+  },
+  closeModalButton: {
+    backgroundColor: "#393D3F",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  closeModalText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   movesCount: {
     fontSize: 36,
